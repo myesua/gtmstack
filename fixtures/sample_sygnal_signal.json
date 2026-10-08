@@ -1,0 +1,13 @@
+{
+  "event_id": "evt_01JTEST000000000000000000",
+  "event": "signal.created",
+  "signal_id": "sig_01JTEST000000000000000000",
+  "source": "reddit",
+  "url": "https://www.reddit.com/r/SaaS/comments/example/",
+  "author": "u/example_founder",
+  "text": "Anyone using a tool for this? Looking for an alternative to what we have, budget approved and need a solution now.",
+  "published_at": "2026-01-02T03:04:05Z",
+  "score": 8.6,
+  "pain_summary": "Team is actively replacing their current tool and has budget.",
+  "suggested_opener": "Saw your post about replacing your current tool - happy to share how we approach this."
+}

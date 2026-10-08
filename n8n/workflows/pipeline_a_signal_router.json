@@ -1,0 +1,111 @@
+{
+  "name": "Pipeline A - Sygnal Signal Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pipeline-a",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Sygnal Signal (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-140, 300],
+      "webhookId": "pipeline-a"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mirror of pipeline_core.scoring + pipeline_core.routing.\n// The receiver already computes these; recomputing here keeps the n8n\n// workflow self-contained and lets you tune routing without redeploying.\nconst HOT = Number($env.ROUTE_HOT_THRESHOLD || 70);\nconst WARM = Number($env.ROUTE_WARM_THRESHOLD || 40);\n\nconst ROUTES = {\n  hot: { action: 'ae_direct', owner: 'ae', slaMinutes: 60, notify: true },\n  warm: { action: 'sdr_priority_queue', owner: 'sdr', slaMinutes: 240, notify: false },\n  monitor: { action: 'sdr_research_queue', owner: 'sdr', slaMinutes: 1440, notify: false },\n  nurture: { action: 'nurture_sequence', owner: 'marketing', slaMinutes: 10080, notify: false },\n  archive: { action: 'none', owner: 'none', slaMinutes: 0, notify: false },\n};\n\nconst priority = Number($json.signal?.priority ?? 0);\nconst bucket = priority >= HOT ? 'hot' : priority >= WARM ? 'warm' : priority >= 20 ? 'monitor' : 'archive';\nconst route = ROUTES[bucket];\n\nreturn [{\n  json: {\n    ...$json.signal,\n    bucket,\n    action: route.action,\n    owner: route.owner,\n    sla_minutes: route.slaMinutes,\n    notify: route.notify,\n    received_at: new Date().toISOString(),\n  },\n}];"
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Score & Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-priority-hot",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "={{ Number($env.ROUTE_HOT_THRESHOLD || 70) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Hot lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `:rotating_light: HOT signal (priority ${$json.priority}, ${$json.source}, score ${$json.sygnal_score}/10)\\n${$json.text}\\n${$json.url}` }) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Notify Owner (Slack/Discord)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', signal_id: $json.signal_id, bucket: $json.bucket, action: $json.action }) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Sygnal Signal (Webhook)": {
+      "main": [[{ "node": "Score & Route", "type": "main", "index": 0 }]]
+    },
+    "Score & Route": {
+      "main": [[{ "node": "Hot lead?", "type": "main", "index": 0 }]]
+    },
+    "Hot lead?": {
+      "main": [
+        [{ "node": "Notify Owner (Slack/Discord)", "type": "main", "index": 0 }],
+        [{ "node": "Respond", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Owner (Slack/Discord)": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "tags": []
+}

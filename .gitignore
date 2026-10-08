@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Env & secrets
+.env
+.env.local
+
+# Local data / exports
+data/
+*.log
+
+# n8n runtime (self-hosted volume)
+n8n/.n8n/
+
+# OS
+.DS_Store
