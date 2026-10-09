@@ -2,7 +2,7 @@
 
 A code-first GTM engineering portfolio: real, version-controlled signal → route → act pipelines built on [Sygnal](https://trysygnal.com) buyer-intent signals with a 100% free tool stack.
 
-**Status:** Pipeline A (Signal Router) is runnable end-to-end against Postgres; the competitor/alternative SEO generator builds a static site.
+**Status:** Pipeline A (Signal Router) is runnable end-to-end against Postgres; the competitor/alternative SEO generator is live on Cloudflare Pages.
 
 ## Architecture (Pipeline A)
 
@@ -75,9 +75,12 @@ Turns structured competitor data into static, answer-first comparison pages — 
 ```bash
 make seo         # -> seo/site/index.html, alternatives/*.html, vs/*.html, sitemap.xml, llms.txt
 make seo-serve   # preview at http://localhost:8090
+make seo-deploy  # publish to Cloudflare Pages
 ```
 
-Content is generated from `seo/data.json` (never free-written), so every page carries unique facts. Pricing/features in that file are **estimates — verify before publishing**.
+Live: **https://sygnal-alternatives.pages.dev** (Cloudflare Pages).
+
+Content is generated from `seo/data.json` (never free-written), so every page carries unique facts. Pricing in that file is **source-cited** (vendor pages + Vendr procurement data, Oct 2026) — re-verify before republishing, since prices change.
 
 ## Layout
 
@@ -103,7 +106,7 @@ fixtures/, scripts/       sample payload + signed test sender
 | **A — Signal Router** | webhook → verify → normalize → route → n8n notify | ✅ runnable |
 | **B — Enrichment + scoring** | waterfall enrichment (free providers), real firmographic fit, dashboard | ⏭️ next |
 | **C — Personalization + feedback loop** | LLM opener drafts, human review, reply outcomes re-weight scoring | planned |
-| **SEO — Competitor/alternative pages** | programmatic pages from structured data, free static hosting | ✅ builds |
+| **SEO — Competitor/alternative pages** | programmatic pages from structured data, free static hosting | ✅ live (Cloudflare Pages) |
 
 ## Tool stack (all free / free tier)
 

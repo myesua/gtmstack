@@ -1,4 +1,4 @@
-.PHONY: install test lint run up down logs psql send-test tunnel import-workflow seo seo-serve clean
+.PHONY: install test lint run up down logs psql send-test tunnel import-workflow seo seo-serve seo-deploy clean
 
 install:
 	uv sync --extra dev
@@ -44,6 +44,10 @@ seo:
 # Preview the generated SEO site locally at http://localhost:8090
 seo-serve: seo
 	uv run python -m http.server 8090 --directory seo/site
+
+# Build and publish the SEO site to Cloudflare Pages (project: sygnal-alternatives).
+seo-deploy: seo
+	uv run wrangler pages deploy seo/site --project-name sygnal-alternatives --branch main --commit-dirty=true
 
 clean:
 	rm -rf .pytest_cache .ruff_cache
