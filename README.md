@@ -8,10 +8,10 @@ A code-first GTM engineering portfolio: real, version-controlled signal → rout
 
 ```
   Sygnal webhook                          Sygnal owns scoring.
-        │  HMAC-signed POST               We consume its verdict:
+        │  POST + X-Sygnal-Secret          We consume its verdict:
         ▼                                 score, icp_score, entities,
 ┌──────────────────────────────┐          competitors, suggested_action.
-│  webhook_receiver (FastAPI)  │   verify signature
+│  webhook_receiver (FastAPI)  │   verify secret header
 │  services/webhook_receiver   │   idempotent insert into raw_events
 │                              │   ACK 202, process async
 └───────────────┬──────────────┘
@@ -28,7 +28,7 @@ A code-first GTM engineering portfolio: real, version-controlled signal → rout
 Design choices worth talking about in interviews:
 
 - **Consume the verdict, don't recompute it.** Sygnal already scores intent against an ICP blueprint; this pipeline maps `score` → `priority = score × 10` and routes (`pipeline_core/verdict.py`). Only the routing logic is ours.
-- **Verify at the edge.** HMAC-SHA256 on the raw body, constant-time compare (`pipeline_core/signature.py`).
+- **Verify at the edge.** Sygnal sends a static shared secret in `X-Sygnal-Secret` (a `sha256=` HMAC is also accepted); compared in constant time (`pipeline_core/signature.py`).
 - **Idempotency.** `raw_events.event_id` is the PK; duplicate deliveries are acked, not reprocessed.
 - **ACK fast, work async.** Receiver returns `202` and processes in a background task.
 - **Event sourcing.** `pipeline_events` is an append-only audit log of every stage.
@@ -83,7 +83,7 @@ Content is generated from `seo/data.json` (never free-written), so every page ca
 
 ```
 pipeline_core/            shared domain logic (framework-free, unit-tested)
-  signature.py            HMAC-SHA256 webhook verification
+  signature.py            webhook shared-secret (or HMAC) verification
   normalize.py            Sygnal webhook envelope -> NormalizedSignal
   verdict.py              consume Sygnal's score (priority, competitive, ICP match)
   routing.py              bucket + owner + SLA + play

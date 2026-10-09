@@ -24,7 +24,7 @@ Pipeline A implements ingest → route → act and leaves clean seams for B (enr
 ## Request lifecycle
 
 1. **Receive** — POST `/webhooks/sygnal`, read raw body.
-2. **Verify** — HMAC-SHA256 over the raw bytes vs. the configured secret (constant-time). Reject `401` on mismatch when a secret is set.
+2. **Verify** — compare the `X-Sygnal-Secret` shared secret (or an optional `sha256=` HMAC body signature) in constant time. Reject `401` on mismatch when a secret is set.
 3. **Dedupe** — insert the event into `raw_events` keyed by `event_id` (`ON CONFLICT DO NOTHING`). Already-seen → `200 duplicate`, no reprocessing.
 4. **ACK** — return `202 accepted` immediately; the rest runs in a background task.
 5. **Normalize** — tolerant mapping of the Sygnal envelope (`{event, signal}`) to `NormalizedSignal` (alias keys, envelope unwrapping, timestamp coercion).

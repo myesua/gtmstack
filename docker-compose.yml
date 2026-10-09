@@ -1,9 +1,11 @@
 # Local dev stack for Pipeline A.
 #   docker compose up -d
-#   -> Postgres on :5432 (schema auto-applied from db/migrations)
+#   -> Postgres on the host port in .env (POSTGRES_HOST_PORT, default 5432)
 #   -> n8n on http://localhost:5678 (workflows persist in the n8n_data volume)
 #
 # The FastAPI receiver runs on your host via `make run` so you can hot-reload it.
+
+name: gtmstack
 
 services:
   postgres:

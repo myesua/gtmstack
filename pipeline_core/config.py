@@ -33,7 +33,7 @@ class Settings:
     port: int = 8080
 
     sygnal_webhook_secret: str = ""
-    signature_header: str = "X-Sygnal-Signature"
+    signature_header: str = "X-Sygnal-Secret"
 
     n8n_webhook_url: str = ""
     n8n_forward_attempts: int = 3
@@ -60,7 +60,7 @@ def get_settings() -> Settings:
         host=os.environ.get("RECEIVER_HOST", "0.0.0.0"),
         port=_int("RECEIVER_PORT", 8080),
         sygnal_webhook_secret=os.environ.get("SYGNAL_WEBHOOK_SECRET", ""),
-        signature_header=os.environ.get("SYGNAL_SIGNATURE_HEADER", "X-Sygnal-Signature"),
+        signature_header=os.environ.get("SYGNAL_SIGNATURE_HEADER", "X-Sygnal-Secret"),
         n8n_webhook_url=os.environ.get("N8N_WEBHOOK_URL", ""),
         n8n_forward_attempts=_int("N8N_FORWARD_ATTEMPTS", 3),
         n8n_forward_timeout_seconds=_int("N8N_FORWARD_TIMEOUT_SECONDS", 10),

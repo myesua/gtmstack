@@ -30,14 +30,15 @@ Sygnal's job — the pipeline consumes its verdict:
 
 ```
 Sygnal webhook ──▶ FastAPI receiver ──▶ n8n orchestration ──▶ Slack + Postgres
- (HMAC-signed)      verify · dedupe        branch on priority      audit log
+ (X-Sygnal-Secret)  verify · dedupe        branch on priority      audit log
                     ACK 202 · async       (score → priority)
 
                  Sygnal returns: score, icp_score, entities.competitors, suggested_action
 ```
 
-- `services/webhook_receiver/` — FastAPI edge: HMAC-SHA256 verification on the
-  raw body (constant-time), idempotent ingest, fast ACK, async processing.
+- `services/webhook_receiver/` — FastAPI edge: shared-secret verification on the
+  incoming header (constant-time; `sha256=` HMAC also accepted), idempotent
+  ingest, fast ACK, async processing.
 - `pipeline_core/` — framework-free domain logic: signature, normalize, verdict,
   route, store. Pure functions, unit-tested.
 - `n8n/workflows/` — version-controlled orchestration; routes and notifies.
@@ -75,10 +76,14 @@ The `instruction stack` is made explicit rather than scattered:
 
 These are real, reproducible checks (run `make test` and `make send-test`):
 
-- `18` unit tests pass across signature, normalize, verdict, routing, and SEO.
+- `23` unit tests pass across signature, normalize, verdict, routing, and SEO.
 - `ruff` lint clean.
-- Signed webhook → `202 accepted`; replay → `200 duplicate` (idempotency);
-  unsigned → `401`; tampered signature → `401` (constant-time HMAC).
+- Webhook with the correct `X-Sygnal-Secret` → `202 accepted`; replay → `200`
+  `duplicate` (idempotency); missing or wrong secret → `401` (constant-time).
+- Live Sygnal delivery through a Cloudflare tunnel: `trigger_webhook` returned
+  `202 success`, and a real signal (`score: null`, `legacy_score: 8`) persisted as
+  `priority 80` → routed `hot` (the `legacy_score` fallback), recorded in
+  `raw_events` / `signals` / `pipeline_events`.
 - Sample Sygnal signal (`score 9`, `icp 8`, competitor `LegacyTool`) → `priority 90`
   → routed `hot` with `play: competitive`, persisted to `signals` and served back by
   `/signals/recent` — deterministic and asserted in tests.

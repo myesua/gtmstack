@@ -19,7 +19,7 @@ cp .env.example .env
 
 Edit `.env`:
 
-- `SYGNAL_WEBHOOK_SECRET` — the signing secret for your Sygnal webhook. **While blank, signature verification is disabled** (handy for the first run, unsafe for anything real).
+- `SYGNAL_WEBHOOK_SECRET` — the shared secret Sygnal sends verbatim in the `SYGNAL_SIGNATURE_HEADER` (`X-Sygnal-Secret` by default). **While blank, verification is disabled** (handy for the first run, unsafe for anything real). A `sha256=` HMAC body signature is also accepted.
 - `DATABASE_URL` — leave the default once Postgres is up; blank it to fall back to the in-memory store.
 - `N8N_WEBHOOK_URL` / `SLACK_WEBHOOK_URL` — optional until you wire the orchestration layer.
 
@@ -27,7 +27,7 @@ Edit `.env`:
 
 ```bash
 make run          # terminal 1 - receiver on :8080
-make send-test    # terminal 2 - signed sample signal -> 202 accepted
+make send-test    # terminal 2 - sample signal (X-Sygnal-Secret) -> 202 accepted
 curl localhost:8080/signals/recent
 ```
 

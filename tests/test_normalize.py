@@ -82,3 +82,20 @@ def test_normalize_falls_back_to_legacy_score():
     )
     assert signal.score == 8.0
     assert signal.signal_id == "l1"
+
+
+def test_normalize_real_webhook_delivery():
+    import json
+    from pathlib import Path
+
+    payload = json.loads(Path("fixtures/sample_sygnal_webhook_real.json").read_text())
+    signal = normalize_signal(payload)
+    assert signal.signal_id == "3363"
+    assert signal.score == 8.0
+    assert signal.icp_score is None
+    assert signal.intent_type == "review_comparison"
+    assert signal.entities.tools == ["Apollo"]
+    assert signal.source.label == "G2"
+    assert signal.source.posted_at == datetime(2026, 10, 8, tzinfo=UTC)
+    assert signal.suggested_action == "Reply with a useful Apollo comparison within 24 hours."
+    assert signal.raw["universal_signal"]["recommended_action"] == signal.suggested_action

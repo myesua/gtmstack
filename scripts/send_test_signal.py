@@ -4,15 +4,13 @@
     uv run python scripts/send_test_signal.py
     uv run python scripts/send_test_signal.py --url http://localhost:8080/webhooks/sygnal
 
-Uses SYGNAL_WEBHOOK_SECRET from the environment (or .env) to sign the body, so
-it exercises the exact verification path Sygnal uses in production.
+Uses SYGNAL_WEBHOOK_SECRET from the environment (or .env) as the shared-secret
+header value, mirroring the exact verification path Sygnal uses in production.
 """
 
 from __future__ import annotations
 
 import argparse
-import hashlib
-import hmac
 import os
 import pathlib
 import urllib.request
@@ -41,13 +39,13 @@ def main() -> None:
 
     load_env()
     secret = os.environ.get("SYGNAL_WEBHOOK_SECRET", "")
-    header = os.environ.get("SYGNAL_SIGNATURE_HEADER", "X-Sygnal-Signature")
+    header = os.environ.get("SYGNAL_SIGNATURE_HEADER", "X-Sygnal-Secret")
 
     body = pathlib.Path(args.fixture).read_bytes()
     headers = {"Content-Type": "application/json"}
     if secret:
-        digest = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-        headers[header] = f"sha256={digest}"
+        # Mirror Sygnal: send the static shared secret verbatim in the header.
+        headers[header] = secret
 
     request = urllib.request.Request(args.url, data=body, headers=headers, method="POST")
     with urllib.request.urlopen(request) as response:

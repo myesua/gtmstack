@@ -3,7 +3,7 @@
     Sygnal webhook -> [this receiver] -> n8n (orchestration) -> Slack / CRM
 
 Responsibilities (everything that must be correct before downstream work):
-  1. Verify the HMAC signature on the raw body.
+  1. Verify the shared-secret header (`X-Sygnal-Secret`) on the raw request.
   2. Enforce idempotency via an append-only raw_events table.
   3. ACK fast (202) and process asynchronously.
   4. Normalize Sygnal's verdict and route it (no re-scoring).
