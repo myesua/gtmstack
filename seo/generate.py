@@ -104,9 +104,9 @@ def page(title: str, description: str, canonical: str, body: str, schema: str = 
 <main class="wrap">
 {body}
 <footer>
-<p>Updated {UPDATED}. Competitor pricing and features are estimates and change
-often — always confirm on the vendor's own site. Sygnal is intent data, not a
-substitute for your own judgment.</p>
+<p>Updated {UPDATED}. Competitor pricing is cited from vendor pages and
+procurement data and changes often — confirm on the vendor's own site. Sygnal is
+intent data, not a substitute for your own judgment.</p>
 <p><a href="https://trysygnal.com">trysygnal.com</a></p>
 </footer>
 </main>
@@ -358,9 +358,9 @@ def main() -> None:
     write(out / "robots.txt", f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n")
     write(out / "llms.txt", render_llms(subject, competitors, base))
 
-    pages = 3 * len(competitors) + 1
+    pages = 2 * len(competitors) + 1
     print(f"generated {pages} pages + sitemap/robots/llms -> {out}")
-    print("REMINDER: verify competitor pricing/features in seo/data.json before publishing.")
+    print("REMINDER: re-verify competitor pricing in seo/data.json before publishing (prices change).")
 
 
 if __name__ == "__main__":

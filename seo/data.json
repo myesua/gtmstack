@@ -1,5 +1,5 @@
 {
-  "_warning": "Pricing and feature facts here are ESTIMATES for template scaffolding. VERIFY every claim against the competitor's own site before publishing — inaccurate competitor pricing is a legal and credibility risk. Set verified=true only after you have a source.",
+  "_warning": "Pricing was verified against vendor pages and procurement data (Vendr) in October 2026; each competitor lists `sources`. Prices change often - re-verify before republishing. Level/freshness/feature flags are qualitative comparisons.",
   "subject": {
     "name": "Sygnal",
     "slug": "sygnal",
@@ -30,7 +30,7 @@
       "has_individual_signals": false,
       "has_enrichment": false,
       "has_mcp": false,
-      "pricing_note": "Reported around $25,000/year; enterprise sales, no self-serve tier.",
+      "pricing_note": "No public pricing; median contract ~$25,000/yr (Vendr, n=35; range ~$13,000-$80,450). Enterprise-only, annual contracts.",
       "pricing_annual_estimate": 25000,
       "why_switch": [
         "Priced for enterprise budgets, not founders or small teams",
@@ -39,8 +39,8 @@
         "No self-serve path to start today"
       ],
       "best_for": "Large marketing teams buying broad account-level intent.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.vendr.com/marketplace/bombora"]
     },
     {
       "name": "6sense",
@@ -53,7 +53,7 @@
       "has_individual_signals": false,
       "has_enrichment": true,
       "has_mcp": false,
-      "pricing_note": "Reported around $62,000/year; annual contracts, enterprise onboarding.",
+      "pricing_note": "No public pricing; median contract ~$62,000/yr (Vendr, n=385; range ~$11,000-$177,000). Quote-only, multi-year.",
       "pricing_annual_estimate": 62000,
       "why_switch": [
         "Sold as a platform with a platform price and setup",
@@ -62,8 +62,8 @@
         "Long contracts and procurement cycles"
       ],
       "best_for": "Enterprise ABM teams that need a full orchestration platform.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.vendr.com/marketplace/6sense"]
     },
     {
       "name": "Demandbase",
@@ -76,8 +76,8 @@
       "has_individual_signals": false,
       "has_enrichment": true,
       "has_mcp": false,
-      "pricing_note": "Enterprise pricing, typically quoted annually.",
-      "pricing_annual_estimate": null,
+      "pricing_note": "No public pricing; median contract ~$65,000/yr (Vendr, n=185; range ~$24,000-$164,265); entry ~$18,000 plus ~$29,000 onboarding.",
+      "pricing_annual_estimate": 65000,
       "why_switch": [
         "Enterprise-first packaging and pricing",
         "Account-level signals rather than the individual in-market buyer",
@@ -85,8 +85,8 @@
         "Freshness is secondary to coverage"
       ],
       "best_for": "Enterprise GTM teams running account-based programs.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.vendr.com/marketplace/demandbase"]
     },
     {
       "name": "ZoomInfo",
@@ -99,8 +99,8 @@
       "has_individual_signals": false,
       "has_enrichment": true,
       "has_mcp": false,
-      "pricing_note": "Enterprise contracts; frequently cited five- to six-figure annual deals.",
-      "pricing_annual_estimate": null,
+      "pricing_note": "No public pricing; reported tiers ~$15,000 (Professional) to ~$40,000+ (Elite); median contract ~$33,500/yr (Vendr, n=1,573). Annual, 3-seat minimum.",
+      "pricing_annual_estimate": 33500,
       "why_switch": [
         "Priced and packaged for enterprise data teams",
         "Intent is one layer inside a much larger contract",
@@ -108,8 +108,8 @@
         "Seat-based pricing punishes lean teams"
       ],
       "best_for": "Sales orgs that need a broad B2B contact and data platform.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.vendr.com/marketplace/zoominfo"]
     },
     {
       "name": "Clay",
@@ -121,8 +121,8 @@
       "self_serve": true,
       "has_individual_signals": false,
       "has_enrichment": true,
-      "has_mcp": false,
-      "pricing_note": "Free tier plus usage-based credits; scales with enrichment volume.",
+      "has_mcp": true,
+      "pricing_note": "Free tier; paid plans from ~$149/mo (Launch ~$185, Growth ~$495), usage-based on Actions + Data Credits.",
       "pricing_annual_estimate": null,
       "why_switch": [
         "Clay enriches and orchestrates, but does not generate the intent signal itself",
@@ -131,8 +131,8 @@
         "Sygnal plugs into Clay via webhook to be that signal source"
       ],
       "best_for": "Teams that already have a signal and want to enrich and route it.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.clay.com/faq/how-much-does-it-cost"]
     },
     {
       "name": "Apollo",
@@ -145,7 +145,7 @@
       "has_individual_signals": false,
       "has_enrichment": true,
       "has_mcp": false,
-      "pricing_note": "Self-serve tiers from roughly $49/user/month; enterprise above.",
+      "pricing_note": "Free tier; Basic $49, Professional $79, Organization $119 per seat/month (annual billing).",
       "pricing_annual_estimate": null,
       "why_switch": [
         "Intent filters are broad and account-level",
@@ -154,8 +154,8 @@
         "No 48-hour public-pain window"
       ],
       "best_for": "Teams that want a large contact database plus sequencing in one place.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.apollo.io/pricing"]
     },
     {
       "name": "RB2B",
@@ -168,7 +168,7 @@
       "has_individual_signals": true,
       "has_enrichment": true,
       "has_mcp": false,
-      "pricing_note": "Self-serve subscription; usage-based tiers.",
+      "pricing_note": "Free (150 resolutions/mo, company-level only); Starter $79, Pro $149, Pro+ $199 per month (credit-based).",
       "pricing_annual_estimate": null,
       "why_switch": [
         "Only sees people who already visited YOUR site",
@@ -177,8 +177,8 @@
         "No buying-intent score against your ICP blueprint"
       ],
       "best_for": "Teams that want to identify the people already visiting their website.",
-      "verified": false,
-      "sources": []
+      "verified": true,
+      "sources": ["https://www.rb2b.com/pricing"]
     }
   ]
 }
