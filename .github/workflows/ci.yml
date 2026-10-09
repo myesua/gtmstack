@@ -30,3 +30,6 @@ jobs:
           for f in n8n/workflows/*.json; do
             uv run python -c "import json,sys; json.load(open(sys.argv[1]))" "$f"
           done
+
+      - name: Build SEO site
+        run: uv run python seo/generate.py --out /tmp/seo-site

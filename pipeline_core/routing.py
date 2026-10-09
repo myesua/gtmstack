@@ -1,13 +1,15 @@
 """Routing stage (instruction-stack Layer 4: sequence logic).
 
-Maps a scored signal to a bucket, an owner and an SLA. The bucket determines
-whether a human is alerted and which sequence the signal enters.
+Turns Sygnal's verdict into a destination: a bucket, an owner, an SLA, and a
+*play*. Routing reads the verdict (score -> priority) and Sygnal's extracted
+entities (competitor named -> competitive play); it never recomputes the score.
 """
 
 from __future__ import annotations
 
 from pipeline_core.config import get_settings
-from pipeline_core.models import RouteDecision
+from pipeline_core.models import NormalizedSignal, RouteDecision
+from pipeline_core.verdict import is_competitive, priority_from_score
 
 # bucket -> (action, owner, sla_minutes, notify)
 _ROUTES: dict[str, tuple[str, str, int, bool]] = {
@@ -19,8 +21,18 @@ _ROUTES: dict[str, tuple[str, str, int, bool]] = {
 }
 
 
+def bucket_for(priority: int, *, hot: int, warm: int) -> str:
+    if priority >= hot:
+        return "hot"
+    if priority >= warm:
+        return "warm"
+    if priority >= 20:
+        return "monitor"
+    return "archive"
+
+
 def route(
-    priority: int,
+    signal: NormalizedSignal,
     *,
     hot_threshold: int | None = None,
     warm_threshold: int | None = None,
@@ -29,27 +41,25 @@ def route(
     hot = settings.route_hot_threshold if hot_threshold is None else hot_threshold
     warm = settings.route_warm_threshold if warm_threshold is None else warm_threshold
 
-    if priority >= hot:
-        bucket = "hot"
-    elif priority >= warm:
-        bucket = "warm"
-    elif priority >= 20:
-        bucket = "monitor"
-    else:
-        bucket = "archive"
-
+    priority = priority_from_score(signal.score)
+    bucket = bucket_for(priority, hot=hot, warm=warm)
     action, owner, sla, notify = _ROUTES[bucket]
+    play = "competitive" if is_competitive(signal) else "standard"
+
     return RouteDecision(
         bucket=bucket,
         priority=priority,
+        play=play,
         action=action,
         owner=owner,
         sla_minutes=sla,
         notify=notify,
+        suggested_action=signal.suggested_action,
     )
 
 
-def route_signal(signal) -> RouteDecision:
-    decision = route(signal.priority)
+def route_signal(signal: NormalizedSignal) -> RouteDecision:
+    decision = route(signal)
+    signal.priority = decision.priority
     signal.bucket = decision.bucket
     return decision

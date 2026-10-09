@@ -17,10 +17,10 @@
     },
     {
       "parameters": {
-        "jsCode": "// Mirror of pipeline_core.scoring + pipeline_core.routing.\n// The receiver already computes these; recomputing here keeps the n8n\n// workflow self-contained and lets you tune routing without redeploying.\nconst HOT = Number($env.ROUTE_HOT_THRESHOLD || 70);\nconst WARM = Number($env.ROUTE_WARM_THRESHOLD || 40);\n\nconst ROUTES = {\n  hot: { action: 'ae_direct', owner: 'ae', slaMinutes: 60, notify: true },\n  warm: { action: 'sdr_priority_queue', owner: 'sdr', slaMinutes: 240, notify: false },\n  monitor: { action: 'sdr_research_queue', owner: 'sdr', slaMinutes: 1440, notify: false },\n  nurture: { action: 'nurture_sequence', owner: 'marketing', slaMinutes: 10080, notify: false },\n  archive: { action: 'none', owner: 'none', slaMinutes: 0, notify: false },\n};\n\nconst priority = Number($json.signal?.priority ?? 0);\nconst bucket = priority >= HOT ? 'hot' : priority >= WARM ? 'warm' : priority >= 20 ? 'monitor' : 'archive';\nconst route = ROUTES[bucket];\n\nreturn [{\n  json: {\n    ...$json.signal,\n    bucket,\n    action: route.action,\n    owner: route.owner,\n    sla_minutes: route.slaMinutes,\n    notify: route.notify,\n    received_at: new Date().toISOString(),\n  },\n}];"
+        "jsCode": "// Consume Sygnal's verdict. The receiver already normalized + routed it,\n// but recomputing here keeps the workflow self-contained and lets you tune\n// routing without redeploying the edge service.\n// NOTE: we do NOT re-score. `score` is Sygnal's 0-10 buyer-intent verdict.\nconst HOT = Number($env.ROUTE_HOT_THRESHOLD || 70);\nconst WARM = Number($env.ROUTE_WARM_THRESHOLD || 40);\n\nconst ROUTES = {\n  hot: { action: 'ae_direct', owner: 'ae', slaMinutes: 60, notify: true },\n  warm: { action: 'sdr_priority_queue', owner: 'sdr', slaMinutes: 240, notify: false },\n  monitor: { action: 'sdr_research_queue', owner: 'sdr', slaMinutes: 1440, notify: false },\n  nurture: { action: 'nurture_sequence', owner: 'marketing', slaMinutes: 10080, notify: false },\n  archive: { action: 'none', owner: 'none', slaMinutes: 0, notify: false },\n};\n\nconst signal = $json.signal ?? $json;\nconst score = Number(signal.score ?? 0);\nconst priority = Math.max(0, Math.min(100, Math.round(score * 10)));\nconst bucket = priority >= HOT ? 'hot' : priority >= WARM ? 'warm' : priority >= 20 ? 'monitor' : 'archive';\nconst route = ROUTES[bucket];\nconst competitors = signal.competitors ?? [];\nconst play = competitors.length > 0 ? 'competitive' : 'standard';\n\nreturn [{\n  json: {\n    ...signal,\n    priority,\n    bucket,\n    play,\n    action: route.action,\n    owner: route.owner,\n    sla_minutes: route.slaMinutes,\n    notify: route.notify,\n    received_at: new Date().toISOString(),\n  },\n}];"
       },
       "id": "a1b2c3d4-0002-4000-8000-000000000002",
-      "name": "Score & Route",
+      "name": "Route Sygnal Verdict",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [80, 300]
@@ -60,7 +60,7 @@
         "url": "={{ $env.SLACK_WEBHOOK_URL }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ text: `:rotating_light: HOT signal (priority ${$json.priority}, ${$json.source}, score ${$json.sygnal_score}/10)\\n${$json.text}\\n${$json.url}` }) }}",
+        "jsonBody": "={{ JSON.stringify({ text: `:rotating_light: HOT ${$json.play} signal (score ${$json.score}/10, icp ${$json.icp_score}, priority ${$json.priority})\\nsource: ${$json.source_label}${($json.competitors||[]).length ? ' · competitor: ' + $json.competitors[0] : ''}\\n${$json.title}\\n${$json.url}\\n${$json.suggested_action}` }) }}",
         "options": {}
       },
       "id": "a1b2c3d4-0004-4000-8000-000000000004",
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'routed', signal_id: $json.signal_id, bucket: $json.bucket, action: $json.action }) }}",
+        "responseBody": "={{ JSON.stringify({ status: 'routed', signal_id: $json.signal_id, score: $json.score, bucket: $json.bucket, play: $json.play, action: $json.action }) }}",
         "options": {}
       },
       "id": "a1b2c3d4-0005-4000-8000-000000000005",
@@ -84,9 +84,9 @@
   ],
   "connections": {
     "Sygnal Signal (Webhook)": {
-      "main": [[{ "node": "Score & Route", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Route Sygnal Verdict", "type": "main", "index": 0 }]]
     },
-    "Score & Route": {
+    "Route Sygnal Verdict": {
       "main": [[{ "node": "Hot lead?", "type": "main", "index": 0 }]]
     },
     "Hot lead?": {

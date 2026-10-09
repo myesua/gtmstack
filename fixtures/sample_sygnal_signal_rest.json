@@ -1,0 +1,47 @@
+{
+  "_note": "Representative REST shape from POST / {action:list_signals} — note `entity` (singular), `recommended_action`, nested `blueprint`, and flat `source_label`/`source_url`.",
+  "event": "sygnal.signal",
+  "signal_id": "3363",
+  "score": 6,
+  "legacy_score": 8,
+  "score_status": "computed",
+  "icp_score": 9,
+  "score_breakdown": {
+    "buying_intent": { "score": 7, "evidence": "Evaluating a switch" },
+    "recency": { "score": 9, "evidence": "Posted today" }
+  },
+  "title": "Switching off our current intent provider — what else is out there?",
+  "source_label": "r/SaaS",
+  "source_url": "https://community.example.test/posts/3363",
+  "posted_at": "2026-10-08T00:00:00.000Z",
+  "intent_type": "switching_evaluation",
+  "family": "trigger_event",
+  "signal_kind": "buyer_pain",
+  "trigger_type": "competitor_switch",
+  "entity": {
+    "company_name": "Example Co",
+    "company_domain": "northstar.test",
+    "author": "founder_example",
+    "competitors": ["LegacyTool"],
+    "tools": ["Google Sheets"],
+    "topics": ["outbound", "pipeline"]
+  },
+  "source": {
+    "label": "r/SaaS",
+    "url": "https://community.example.test/posts/3363",
+    "adapter": "reddit",
+    "source_id": null
+  },
+  "timestamps": {
+    "posted_at": "2026-10-08T00:00:00.000Z",
+    "captured_at": "2026-10-08T13:55:09.067Z"
+  },
+  "blueprint": {
+    "version": null,
+    "explanation": "Matches the active buyer-pain rule.",
+    "direct_evidence": [{ "quote": "Switching off our current intent provider." }],
+    "recommended_action": "Reply with a useful comparison within 24 hours."
+  },
+  "recommended_action": "Reply with a useful comparison within 24 hours.",
+  "provenance": { "dedupe_key": "review|565ff588", "status": "new" }
+}

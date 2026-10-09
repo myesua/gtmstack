@@ -18,5 +18,8 @@ data/
 # n8n runtime (self-hosted volume)
 n8n/.n8n/
 
+# Generated SEO site (build artifact)
+seo/site/
+
 # OS
 .DS_Store

@@ -25,21 +25,25 @@ should be judged.
 
 ## What was built
 
-A production-shaped **ingest → normalize → score → route → act** pipeline:
+A production-shaped **ingest → normalize → route → act** pipeline. Scoring is
+Sygnal's job — the pipeline consumes its verdict:
 
 ```
 Sygnal webhook ──▶ FastAPI receiver ──▶ n8n orchestration ──▶ Slack + Postgres
  (HMAC-signed)      verify · dedupe        branch on priority      audit log
-                    ACK 202 · async
+                    ACK 202 · async       (score → priority)
+
+                 Sygnal returns: score, icp_score, entities.competitors, suggested_action
 ```
 
 - `services/webhook_receiver/` — FastAPI edge: HMAC-SHA256 verification on the
   raw body (constant-time), idempotent ingest, fast ACK, async processing.
-- `pipeline_core/` — framework-free domain logic: signature, normalize, score,
+- `pipeline_core/` — framework-free domain logic: signature, normalize, verdict,
   route, store. Pure functions, unit-tested.
 - `n8n/workflows/` — version-controlled orchestration; routes and notifies.
 - `db/migrations/` — append-only event store (`raw_events`, `pipeline_events`),
   current signal state (`signals`), and a `dead_letters` queue.
+- `seo/` — competitor/alternative static-site generator (acquisition asset).
 
 ## Engineering decisions worth defending
 
@@ -48,34 +52,38 @@ Sygnal webhook ──▶ FastAPI receiver ──▶ n8n orchestration ──▶ 
 | **Verify at the edge, not in n8n** | Downstream stages trust the payload; bad signatures fail early and cheaply (cheap before expensive). |
 | **Idempotency via the `raw_events` PK** | At-least-once delivery is normal. Reprocessing a duplicate must be impossible, not unlikely. |
 | **ACK `202` + process async** | Senders time out; slow downstream work must never block the acknowledgement. |
-| **Append-only `pipeline_events`** | Event sourcing — replay history to rebuild state or backtest a new scoring model. |
+| **Append-only `pipeline_events`** | Event sourcing — replay history to rebuild state or backtest a new routing model. |
 | **Dead-letter queue + retries** | Silent failures are the #1 cause of "leads fell through the cracks." Every dropped forward is recorded and alertable. |
 | **In-memory fallback store** | The whole pipeline runs in one command with zero infra; Postgres is opt-in, not required to demo. |
-| **Scoring in code, mirrored in n8n** | Testable pure functions for the model; a visual workflow for tuning without redeploying. |
+| **Consume the verdict, don't recompute it** | Sygnal already scores intent against an ICP blueprint; the pipeline maps `score` → `priority` and routes. Rebuilding scoring would just diverge from the source of truth. |
+| **Enriched routing** | `entities.competitors` triggers a `competitive` play and `suggested_action` rides along on the alert. |
 
 Design principle throughout: **the instruction stack, persistent context, and
 feedback loops matter more than the tools.** n8n and Postgres are swappable; the
-scoring model, routing logic, and event history are the durable asset.
+routing logic, entity handling, and event history are the durable asset.
 
 The `instruction stack` is made explicit rather than scattered:
 
 | Layer | Where |
 |---|---|
-| 1. ICP + scoring | `pipeline_core/scoring.py` — weights and thresholds are constants |
-| 2. Messaging framework | openers carried on the signal (Pipeline C) |
-| 3. Personalization rules | Pipeline C |
-| 4. Sequence logic | `pipeline_core/routing.py` — bucket → owner → SLA |
+| 1. Intent scoring | Sygnal (upstream) — `score` / `icp_score`; not recomputed here |
+| 2. Verdict mapping | `pipeline_core/verdict.py` — `priority = score × 10`, competitive + ICP flags |
+| 3. Sequence logic | `pipeline_core/routing.py` — bucket → owner → SLA → play |
+| 4. Messaging framework | `suggested_action` carried on the signal (Pipeline C drafts from it) |
 
 ## Verified engineering evidence
 
 These are real, reproducible checks (run `make test` and `make send-test`):
 
-- `14` unit tests pass across signature, normalize, scoring, and routing.
+- `18` unit tests pass across signature, normalize, verdict, routing, and SEO.
 - `ruff` lint clean.
 - Signed webhook → `202 accepted`; replay → `200 duplicate` (idempotency);
   unsigned → `401`; tampered signature → `401` (constant-time HMAC).
-- Sample signal scores `fit 50 / intent 70 / priority 59` → routed `warm` →
-  `sdr_priority_queue`, SLA 240 min — deterministic and asserted in tests.
+- Sample Sygnal signal (`score 9`, `icp 8`, competitor `LegacyTool`) → `priority 90`
+  → routed `hot` with `play: competitive`, persisted to `signals` and served back by
+  `/signals/recent` — deterministic and asserted in tests.
+- SEO generator produces 15 comparison pages + `sitemap.xml` / `robots.txt` /
+  `llms.txt`, with valid JSON-LD and no broken internal links (asserted in tests).
 
 ## Results (fill in after running live)
 
@@ -102,15 +110,18 @@ The role asks for n8n *and* real engineering. Neither alone is enough:
 - **n8n** handles orchestration, branching, and human-visible tuning — what
   RevOps/GTM teams actually operate day to day.
 - **Code** handles the parts that must be correct and testable: signature
-  verification, idempotency, scoring math, retries, event history.
+  verification, idempotency, verdict mapping, retries, event history.
 
 The workflow JSON is committed to Git and imported via `make import-workflow`,
 so orchestration is versioned like everything else.
 
 ## What's next
 
-- **Pipeline B** — enrichment waterfall (free providers), real firmographic fit,
-  a metrics dashboard. Seam: `score_signal` already accepts firmographic /
-  technographic / behavioral inputs.
-- **Pipeline C** — LLM-drafted openers on a free tier, a human review queue, and
-  a feedback loop that re-weights scoring from real reply/meeting outcomes.
+- **Pipeline B** — enrichment waterfall (free providers), real firmographic data,
+  a metrics dashboard. Seam: Sygnal's `entities` already provide
+  `company_domain`, `competitors`, and `tools` as waterfall inputs.
+- **Pipeline C** — LLM-drafted openers on a free tier (seeded by
+  `suggested_action` and the `competitive` play), a human review queue, and a
+  feedback loop that tunes routing thresholds from real reply/meeting outcomes.
+- **SEO generator** — deepen the page set (use-case and integration pages,
+  GEO-optimized for AI answers), then deploy to free static hosting.

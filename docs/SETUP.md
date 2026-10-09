@@ -43,6 +43,8 @@ open http://localhost:5678
 
 n8n stores its own data in the `n8n_data` Docker volume and its config lives in the compose file.
 
+If you already run Postgres locally on `5432`, set `POSTGRES_HOST_PORT=5433` in `.env` (and update `DATABASE_URL` to match) so the container doesn't collide.
+
 ### n8n environment for the workflow
 
 The Pipeline A workflow reads `ROUTE_HOT_THRESHOLD`, `ROUTE_WARM_THRESHOLD` and `SLACK_WEBHOOK_URL` from the environment. They are already set in `docker-compose.yml`; set `SLACK_WEBHOOK_URL` in your shell before `make up` to enable notifications.
@@ -56,7 +58,7 @@ make tunnel
 # prints something like https://blue-river-1234.trycloudflare.com
 ```
 
-Register `https://<random>.trycloudflare.com/webhooks/sygnal` as the webhook target in Sygnal for the `signal.created` event, then set the same `SYGNAL_WEBHOOK_SECRET`.
+Register `https://<random>.trycloudflare.com/webhooks/sygnal` as the webhook target in Sygnal for the `sygnal.signal` event, then set the same `SYGNAL_WEBHOOK_SECRET`.
 
 Notes:
 

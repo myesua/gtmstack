@@ -1,7 +1,7 @@
 [project]
-name = "gtmengineering"
+name = "gtmstack"
 version = "0.1.0"
-description = "GTM engineering portfolio: signal -> enrich -> score -> route -> act pipelines (Pipeline A: Sygnal signal router)"
+description = "Code-first GTM engineering pipelines: Sygnal signal -> route -> act, plus a competitor-alternative SEO generator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -27,6 +27,7 @@ packages = ["pipeline_core"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100

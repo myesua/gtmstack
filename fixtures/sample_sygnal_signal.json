@@ -1,13 +1,34 @@
 {
-  "event_id": "evt_01JTEST000000000000000000",
-  "event": "signal.created",
-  "signal_id": "sig_01JTEST000000000000000000",
-  "source": "reddit",
-  "url": "https://www.reddit.com/r/SaaS/comments/example/",
-  "author": "u/example_founder",
-  "text": "Anyone using a tool for this? Looking for an alternative to what we have, budget approved and need a solution now.",
-  "published_at": "2026-01-02T03:04:05Z",
-  "score": 8.6,
-  "pain_summary": "Team is actively replacing their current tool and has budget.",
-  "suggested_opener": "Saw your post about replacing your current tool - happy to share how we approach this."
+  "event": "sygnal.signal",
+  "signal": {
+    "signal_id": "123",
+    "score": 9,
+    "icp_score": 8,
+    "score_breakdown": {
+      "buying_intent": { "score": 9, "evidence": "Asks for a replacement" },
+      "recency": { "score": 10, "evidence": "Posted 20 minutes ago" },
+      "pain": { "score": 8, "evidence": "Cold outreach is not converting" }
+    },
+    "intent_signals": ["asking for recommendations"],
+    "intent_type": "help_request",
+    "signal_kind": "buyer_pain",
+    "trigger_type": null,
+    "entities": {
+      "company_name": "Example Co",
+      "company_domain": "northstar.test",
+      "author": "example_author",
+      "competitors": ["LegacyTool"],
+      "tools": []
+    },
+    "topics": ["outbound", "pipeline"],
+    "title": "Looking for a better way to find warm leads",
+    "direct_evidence": [{ "quote": "Cold outreach is not converting." }],
+    "blueprint_explanation": "Matches the active buyer-pain rule.",
+    "suggested_action": "Reply with a useful comparison within 24 hours.",
+    "source": {
+      "label": "r/example",
+      "url": "https://community.customer.test/posts/123",
+      "posted_at": "2026-08-27T12:00:00.000Z"
+    }
+  }
 }

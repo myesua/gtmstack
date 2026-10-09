@@ -21,24 +21,34 @@ CREATE TABLE IF NOT EXISTS pipeline_events (
 );
 CREATE INDEX IF NOT EXISTS pipeline_events_pipeline_idx ON pipeline_events (pipeline_id, created_at DESC);
 
--- Current state of each scoreable signal.
+-- Current state of each signal. The score/icp_score/score_breakdown columns
+-- carry Sygnal's verdict; `priority` is the pipeline's 0-100 threshold scale.
 CREATE TABLE IF NOT EXISTS signals (
-    signal_id      TEXT PRIMARY KEY,
-    source         TEXT NOT NULL DEFAULT 'unknown',
-    url            TEXT NOT NULL DEFAULT '',
-    author         TEXT NOT NULL DEFAULT '',
-    text           TEXT NOT NULL DEFAULT '',
-    sygnal_score   NUMERIC(4,1),
-    fit_score      INTEGER NOT NULL DEFAULT 0,
-    intent_score   INTEGER NOT NULL DEFAULT 0,
-    priority       INTEGER NOT NULL DEFAULT 0,
-    bucket         TEXT NOT NULL DEFAULT 'archive',
-    status         TEXT NOT NULL DEFAULT 'new',
-    payload        JSONB NOT NULL DEFAULT '{}'::jsonb,
-    first_seen_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    last_scored_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    signal_id        TEXT PRIMARY KEY,
+    score            NUMERIC(4,1),
+    icp_score        NUMERIC(4,1),
+    priority         INTEGER NOT NULL DEFAULT 0,
+    bucket           TEXT NOT NULL DEFAULT 'archive',
+    play             TEXT NOT NULL DEFAULT 'standard',
+    intent_type      TEXT,
+    signal_kind      TEXT,
+    has_competitor   BOOLEAN NOT NULL DEFAULT FALSE,
+    competitors      JSONB NOT NULL DEFAULT '[]'::jsonb,
+    topics           JSONB NOT NULL DEFAULT '[]'::jsonb,
+    company_name     TEXT NOT NULL DEFAULT '',
+    company_domain   TEXT NOT NULL DEFAULT '',
+    author           TEXT NOT NULL DEFAULT '',
+    title            TEXT NOT NULL DEFAULT '',
+    url              TEXT NOT NULL DEFAULT '',
+    source_label     TEXT NOT NULL DEFAULT '',
+    suggested_action TEXT NOT NULL DEFAULT '',
+    status           TEXT NOT NULL DEFAULT 'new',
+    payload          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    first_seen_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_scored_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS signals_bucket_priority_idx ON signals (bucket, priority DESC);
+CREATE INDEX IF NOT EXISTS signals_competitor_idx ON signals (has_competitor) WHERE has_competitor;
 
 -- Failed downstream forwards, kept for replay / alerting (dead letter queue).
 CREATE TABLE IF NOT EXISTS dead_letters (

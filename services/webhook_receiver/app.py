@@ -5,8 +5,8 @@
 Responsibilities (everything that must be correct before downstream work):
   1. Verify the HMAC signature on the raw body.
   2. Enforce idempotency via an append-only raw_events table.
-  3. ACK fast (200) and process asynchronously.
-  4. Normalize, score and route the signal.
+  3. ACK fast (202) and process asynchronously.
+  4. Normalize Sygnal's verdict and route it (no re-scoring).
   5. Forward to n8n with retries; dead-letter on final failure.
 
 Run:
@@ -30,7 +30,6 @@ from pipeline_core.db import build_store
 from pipeline_core.models import NormalizedSignal, RouteDecision
 from pipeline_core.normalize import normalize_signal
 from pipeline_core.routing import route_signal
-from pipeline_core.scoring import score_signal
 from pipeline_core.signature import verify_signature
 
 logging.basicConfig(
@@ -58,11 +57,13 @@ async def lifespan(app: FastAPI):
         await app.state.http.aclose()
 
 
-app = FastAPI(title="GTM Pipeline A - Signal Router", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="GTM Pipeline A - Sygnal Signal Router", version="0.2.0", lifespan=lifespan)
 
 
 def _extract_event_id(payload: dict, signal: NormalizedSignal) -> str:
-    for key in ("event_id", "eventId", "id"):
+    # Sygnal's webhook envelope is {"event": ..., "signal": {...}} and carries no
+    # delivery id, so the signal id is the idempotency key.
+    for key in ("event_id", "eventId"):
         value = payload.get(key)
         if value not in (None, ""):
             return str(value)
@@ -72,19 +73,29 @@ def _extract_event_id(payload: dict, signal: NormalizedSignal) -> str:
 def _signal_dict(signal: NormalizedSignal, decision: RouteDecision | None = None) -> dict:
     data = {
         "signal_id": signal.signal_id,
-        "source": signal.source,
-        "url": signal.url,
-        "author": signal.author,
-        "published_at": signal.published_at.isoformat() if signal.published_at else None,
-        "sygnal_score": signal.sygnal_score,
-        "fit_score": signal.fit_score,
-        "intent_score": signal.intent_score,
+        "score": signal.score,
+        "icp_score": signal.icp_score,
         "priority": signal.priority,
+        "intent_type": signal.intent_type,
+        "signal_kind": signal.signal_kind,
+        "trigger_type": signal.trigger_type,
+        "title": signal.title,
+        "source_label": signal.source.label,
+        "url": signal.source.url,
+        "posted_at": signal.source.posted_at.isoformat() if signal.source.posted_at else None,
+        "company": signal.entities.company_name,
+        "company_domain": signal.entities.company_domain,
+        "author": signal.entities.author,
+        "competitors": signal.entities.competitors,
+        "tools": signal.entities.tools,
+        "topics": signal.topics,
+        "suggested_action": signal.suggested_action,
     }
     if decision is not None:
         data.update(
             {
                 "bucket": decision.bucket,
+                "play": decision.play,
                 "action": decision.action,
                 "owner": decision.owner,
                 "sla_minutes": decision.sla_minutes,
@@ -133,10 +144,15 @@ async def _send_slack(app: FastAPI, signal: NormalizedSignal, decision: RouteDec
     url = app.state.settings.slack_webhook_url
     if not (decision.notify and url):
         return
+    competitor = ""
+    if decision.play == "competitive":
+        competitor = f" · competitor: {signal.entities.competitors[0]}"
     text = (
-        f":rotating_light: *{decision.bucket.upper()}* signal (priority {signal.priority})\n"
-        f"*{signal.source}* · score {signal.sygnal_score}/10\n"
-        f"{signal.text[:280]}\n{signal.url}"
+        f":rotating_light: *{decision.bucket.upper()}* signal "
+        f"(score {signal.score}/10, icp {signal.icp_score}, priority {signal.priority})\n"
+        f"*{signal.source.label}*{competitor}\n"
+        f"{signal.title}\n{signal.source.url}\n"
+        f"_{signal.suggested_action}_"
     )
     try:
         await app.state.http.post(url, json={"text": text})
@@ -148,14 +164,18 @@ async def _process(app: FastAPI, event_id: str, signal: NormalizedSignal) -> Non
     store = app.state.store
     store.append_pipeline_event(event_id, "signal.received", _signal_dict(signal))
 
-    breakdown = score_signal(signal)
-    store.append_pipeline_event(event_id, "signal.scored", vars(breakdown))
-
+    # Sygnal already scored/classified this signal; we only route the verdict.
     decision = route_signal(signal)
     store.append_pipeline_event(
         event_id,
         "signal.routed",
-        {"bucket": decision.bucket, "action": decision.action, "sla_minutes": decision.sla_minutes},
+        {
+            "bucket": decision.bucket,
+            "play": decision.play,
+            "action": decision.action,
+            "priority": decision.priority,
+            "sla_minutes": decision.sla_minutes,
+        },
     )
     store.upsert_signal(signal, decision)
 
@@ -188,7 +208,10 @@ async def sygnal_webhook(request: Request, background: BackgroundTasks):
 
     event_id = _extract_event_id(payload, signal)
     is_new = request.app.state.store.record_raw_event(
-        event_id=event_id, source=signal.source, payload=payload, signature_valid=signature_valid
+        event_id=event_id,
+        source=signal.source.label or "sygnal",
+        payload=payload,
+        signature_valid=signature_valid,
     )
     if not is_new:
         log.info("duplicate delivery %s - acked, not reprocessed", event_id)

@@ -14,7 +14,9 @@ services:
       POSTGRES_PASSWORD: gtm
       POSTGRES_DB: gtm
     ports:
-      - "5432:5432"
+      # Host port is configurable so the container can coexist with a local
+      # Postgres already bound to 5432. Set POSTGRES_HOST_PORT in .env.
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - gtm_pgdata:/var/lib/postgresql/data
       # Files in this dir run once, in name order, on first boot.

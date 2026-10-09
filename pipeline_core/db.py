@@ -28,15 +28,36 @@ class Store(Protocol):
 
     def append_pipeline_event(self, pipeline_id: str, event_type: str, payload: dict) -> None: ...
 
-    def upsert_signal(
-        self, signal: NormalizedSignal, decision: RouteDecision
-    ) -> None: ...
+    def upsert_signal(self, signal: NormalizedSignal, decision: RouteDecision) -> None: ...
 
     def record_dead_letter(
         self, event_id: str, attempt: int, error: str, payload: dict
     ) -> None: ...
 
     def recent_signals(self, limit: int = 20) -> list[dict]: ...
+
+
+def _signal_row(signal: NormalizedSignal, decision: RouteDecision) -> dict:
+    return {
+        "signal_id": signal.signal_id,
+        "score": signal.score,
+        "icp_score": signal.icp_score,
+        "priority": decision.priority,
+        "bucket": decision.bucket,
+        "play": decision.play,
+        "intent_type": signal.intent_type,
+        "signal_kind": signal.signal_kind,
+        "has_competitor": bool(signal.entities.competitors),
+        "competitors": signal.entities.competitors,
+        "topics": signal.topics,
+        "company_name": signal.entities.company_name,
+        "company_domain": signal.entities.company_domain,
+        "author": signal.entities.author,
+        "title": signal.title,
+        "url": signal.source.url,
+        "source_label": signal.source.label,
+        "suggested_action": signal.suggested_action,
+    }
 
 
 class MemoryStore:
@@ -70,18 +91,7 @@ class MemoryStore:
         )
 
     def upsert_signal(self, signal: NormalizedSignal, decision: RouteDecision) -> None:
-        self._signals[signal.signal_id] = {
-            "signal_id": signal.signal_id,
-            "source": signal.source,
-            "url": signal.url,
-            "author": signal.author,
-            "text": signal.text,
-            "sygnal_score": signal.sygnal_score,
-            "fit_score": signal.fit_score,
-            "intent_score": signal.intent_score,
-            "priority": signal.priority,
-            "bucket": decision.bucket,
-        }
+        self._signals[signal.signal_id] = _signal_row(signal, decision)
 
     def record_dead_letter(
         self, event_id: str, attempt: int, error: str, payload: dict
@@ -131,35 +141,41 @@ class PostgresStore:
             )
 
     def upsert_signal(self, signal: NormalizedSignal, decision: RouteDecision) -> None:
+        row = _signal_row(signal, decision)
         with self._pool.connection() as conn:
             conn.execute(
                 """
                 INSERT INTO signals (
-                    signal_id, source, url, author, text, sygnal_score,
-                    fit_score, intent_score, priority, bucket, payload, last_scored_at
+                    signal_id, score, icp_score, priority, bucket, play,
+                    intent_type, signal_kind, has_competitor, competitors, topics,
+                    company_name, company_domain, author, title, url, source_label,
+                    suggested_action, payload, last_scored_at
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, now())
+                VALUES (
+                    %(signal_id)s, %(score)s, %(icp_score)s, %(priority)s, %(bucket)s,
+                    %(play)s, %(intent_type)s, %(signal_kind)s, %(has_competitor)s,
+                    %(competitors)s::jsonb, %(topics)s::jsonb, %(company_name)s,
+                    %(company_domain)s, %(author)s, %(title)s, %(url)s, %(source_label)s,
+                    %(suggested_action)s, %(payload)s::jsonb, now()
+                )
                 ON CONFLICT (signal_id) DO UPDATE SET
-                    fit_score = EXCLUDED.fit_score,
-                    intent_score = EXCLUDED.intent_score,
+                    score = EXCLUDED.score,
+                    icp_score = EXCLUDED.icp_score,
                     priority = EXCLUDED.priority,
                     bucket = EXCLUDED.bucket,
+                    play = EXCLUDED.play,
+                    has_competitor = EXCLUDED.has_competitor,
+                    competitors = EXCLUDED.competitors,
+                    suggested_action = EXCLUDED.suggested_action,
                     last_scored_at = now(),
                     payload = EXCLUDED.payload
                 """,
-                (
-                    signal.signal_id,
-                    signal.source,
-                    signal.url,
-                    signal.author,
-                    signal.text,
-                    signal.sygnal_score,
-                    signal.fit_score,
-                    signal.intent_score,
-                    signal.priority,
-                    decision.bucket,
-                    json.dumps(signal.raw, default=str),
-                ),
+                {
+                    **row,
+                    "competitors": json.dumps(row["competitors"]),
+                    "topics": json.dumps(row["topics"]),
+                    "payload": json.dumps(signal.raw, default=str),
+                },
             )
 
     def record_dead_letter(
@@ -175,21 +191,24 @@ class PostgresStore:
             )
 
     def recent_signals(self, limit: int = 20) -> list[dict]:
+        columns = (
+            "signal_id", "score", "icp_score", "priority", "bucket", "play",
+            "intent_type", "signal_kind", "has_competitor", "companies", "title",
+            "url", "source_label", "suggested_action", "last_scored_at",
+        )
         with self._pool.connection() as conn:
             rows = conn.execute(
                 """
-                SELECT signal_id, source, url, author, text, sygnal_score,
-                       fit_score, intent_score, priority, bucket, last_scored_at
+                SELECT signal_id, score, icp_score, priority, bucket, play,
+                       intent_type, signal_kind, has_competitor,
+                       company_name AS companies, title, url, source_label,
+                       suggested_action, last_scored_at
                 FROM signals
                 ORDER BY last_scored_at DESC
                 LIMIT %s
                 """,
                 (limit,),
             ).fetchall()
-        columns = (
-            "signal_id", "source", "url", "author", "text", "sygnal_score",
-            "fit_score", "intent_score", "priority", "bucket", "last_scored_at",
-        )
         return [dict(zip(columns, row, strict=True)) for row in rows]
 
 

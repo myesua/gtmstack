@@ -1,0 +1,184 @@
+{
+  "_warning": "Pricing and feature facts here are ESTIMATES for template scaffolding. VERIFY every claim against the competitor's own site before publishing — inaccurate competitor pricing is a legal and credibility risk. Set verified=true only after you have a source.",
+  "subject": {
+    "name": "Sygnal",
+    "slug": "sygnal",
+    "one_liner": "Real-time, individual-level buyer-intent signals scored against your ICP blueprint.",
+    "level": "individual + account",
+    "freshness": "under 48 hours",
+    "self_serve": true,
+    "has_individual_signals": true,
+    "has_enrichment": true,
+    "has_mcp": true,
+    "pricing_note": "$29/mo Pro, $99/mo Builder, $299/mo Scale; free trial, no credit card.",
+    "why_choose": [
+      "Individual-level signals: the actual person asking, not a fuzzy account score",
+      "Under-48-hour freshness so the buying moment is still open",
+      "Scored against your ICP blueprint (semantics, intent, pain, competitor mentions)",
+      "Self-serve pricing a fraction of enterprise intent platforms"
+    ]
+  },
+  "competitors": [
+    {
+      "name": "Bombora",
+      "slug": "bombora",
+      "category": "Account-level intent data",
+      "one_liner": "Company-level B2B intent signals built from topic-surge data.",
+      "level": "account",
+      "freshness": "days to weeks",
+      "self_serve": false,
+      "has_individual_signals": false,
+      "has_enrichment": false,
+      "has_mcp": false,
+      "pricing_note": "Reported around $25,000/year; enterprise sales, no self-serve tier.",
+      "pricing_annual_estimate": 25000,
+      "why_switch": [
+        "Priced for enterprise budgets, not founders or small teams",
+        "Account-level intent, so you still have to find the person",
+        "Surge data can trail the actual buying moment by days",
+        "No self-serve path to start today"
+      ],
+      "best_for": "Large marketing teams buying broad account-level intent.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "6sense",
+      "slug": "6sense",
+      "category": "Account-based intent + ABM platform",
+      "one_liner": "ABM platform layering intent, firmographics, and orchestration.",
+      "level": "account",
+      "freshness": "days",
+      "self_serve": false,
+      "has_individual_signals": false,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Reported around $62,000/year; annual contracts, enterprise onboarding.",
+      "pricing_annual_estimate": 62000,
+      "why_switch": [
+        "Sold as a platform with a platform price and setup",
+        "Optimized for account prioritization, not reaching the individual",
+        "Overkill if you need one fresh, actionable person today",
+        "Long contracts and procurement cycles"
+      ],
+      "best_for": "Enterprise ABM teams that need a full orchestration platform.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "Demandbase",
+      "slug": "demandbase",
+      "category": "Account-based GTM platform",
+      "one_liner": "Account-based marketing and intent platform for enterprise GTM.",
+      "level": "account",
+      "freshness": "days to weeks",
+      "self_serve": false,
+      "has_individual_signals": false,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Enterprise pricing, typically quoted annually.",
+      "pricing_annual_estimate": null,
+      "why_switch": [
+        "Enterprise-first packaging and pricing",
+        "Account-level signals rather than the individual in-market buyer",
+        "Heavy platform to adopt for a single motion",
+        "Freshness is secondary to coverage"
+      ],
+      "best_for": "Enterprise GTM teams running account-based programs.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "ZoomInfo",
+      "slug": "zoominfo",
+      "category": "B2B data + intent",
+      "one_liner": "Large B2B contact database with intent and go-to-market data.",
+      "level": "account",
+      "freshness": "days to weeks",
+      "self_serve": false,
+      "has_individual_signals": false,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Enterprise contracts; frequently cited five- to six-figure annual deals.",
+      "pricing_annual_estimate": null,
+      "why_switch": [
+        "Priced and packaged for enterprise data teams",
+        "Intent is one layer inside a much larger contract",
+        "Account-level intent, not the individual asking for help",
+        "Seat-based pricing punishes lean teams"
+      ],
+      "best_for": "Sales orgs that need a broad B2B contact and data platform.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "Clay",
+      "slug": "clay",
+      "category": "GTM enrichment + orchestration",
+      "one_liner": "Enrichment and outbound orchestration workbench (bring-your-own data).",
+      "level": "account + individual (if you supply the signal)",
+      "freshness": "depends on your data source",
+      "self_serve": true,
+      "has_individual_signals": false,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Free tier plus usage-based credits; scales with enrichment volume.",
+      "pricing_annual_estimate": null,
+      "why_switch": [
+        "Clay enriches and orchestrates, but does not generate the intent signal itself",
+        "You still need a signal source to feed it",
+        "Credit costs compound as you add enrichment providers",
+        "Sygnal plugs into Clay via webhook to be that signal source"
+      ],
+      "best_for": "Teams that already have a signal and want to enrich and route it.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "Apollo",
+      "slug": "apollo",
+      "category": "B2B data + sequencing",
+      "one_liner": "Contact database with sequencing and basic intent filters.",
+      "level": "account",
+      "freshness": "days to weeks",
+      "self_serve": true,
+      "has_individual_signals": false,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Self-serve tiers from roughly $49/user/month; enterprise above.",
+      "pricing_annual_estimate": null,
+      "why_switch": [
+        "Intent filters are broad and account-level",
+        "Contacts are matched from a database, not from an active public conversation",
+        "Great for lists, weaker for catching a live buying moment",
+        "No 48-hour public-pain window"
+      ],
+      "best_for": "Teams that want a large contact database plus sequencing in one place.",
+      "verified": false,
+      "sources": []
+    },
+    {
+      "name": "RB2B",
+      "slug": "rb2b",
+      "category": "Person-level website identification",
+      "one_liner": "Person-level website visitor identification pushed to your tools.",
+      "level": "individual",
+      "freshness": "real-time (website visits)",
+      "self_serve": true,
+      "has_individual_signals": true,
+      "has_enrichment": true,
+      "has_mcp": false,
+      "pricing_note": "Self-serve subscription; usage-based tiers.",
+      "pricing_annual_estimate": null,
+      "why_switch": [
+        "Only sees people who already visited YOUR site",
+        "Misses buyers researching the problem elsewhere (Reddit, G2, forums)",
+        "Works best alongside an off-site intent source",
+        "No buying-intent score against your ICP blueprint"
+      ],
+      "best_for": "Teams that want to identify the people already visiting their website.",
+      "verified": false,
+      "sources": []
+    }
+  ]
+}
